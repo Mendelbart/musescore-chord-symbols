@@ -1,6 +1,6 @@
 Custom MuseScore Chord Symbols
 ==============================
-Custom chord symbol XML files for MuseScore, with stacked alterations and custom spacing.
+Custom chord symbol XML files for MuseScore, with stacked alterations and custom spacing. These are modified versions of the `chords_std.xml` and `chords_jazz.xml` in the current MuseScore source code.
 
 
 Usage
