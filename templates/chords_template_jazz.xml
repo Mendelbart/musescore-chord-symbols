@@ -304,6 +304,21 @@
 </token>
 
 <token class="extension">
+	<name>11</name>
+	<render>m:0:&extdown; e1 e1 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>13</name>
+	<render>m:0:&extdown; e1 e3 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>15</name>
+	<render>m:0:&extdown; e1 e5 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
 	<name>(</name>
 	<render>m:0:&extdown; e( m:0:-&extdown;</render>
 </token>

@@ -21,6 +21,10 @@
 -->
 
 <!DOCTYPE museScore [
+	<!--
+		Feel free to edit these variables as you like. All the variables related to
+		distance are in 1/5 spatium units.
+	-->
 	<!ENTITY extsize "0.75"> <!-- size of superscripted extensions/alterations -->
 	<!ENTITY ext2size "0.65"> <!-- size of alterations when two are stacked -->
 	<!ENTITY ext3size "0.55"> <!-- size of alterations when three are stacked -->
@@ -35,14 +39,14 @@
 	<!ENTITY br3pad "-0.8"> <!-- padding of bracket in stack of three alterations (negative to reduce space inside brackets) -->
 	<!ENTITY st2ind "2"> <!-- how much to indent 2-character alterations like #9 to match 3-character alterations like b13 in stack of 2 -->
 	<!ENTITY st3ind "1.7"> <!-- how much to indent 2-character alterations like #9 to match 3-character alterations like b13 in stack of 3 -->
-	<!ENTITY stpad "-0.5"> <!-- padding before a stack of alterations (negative to reduce space) -->
+	<!ENTITY stpad "-0.5"> <!-- padding before a stack of alterations (negative to reduce whitespace) -->
 	<!ENTITY st2halflineh "3.5"> <!-- HALF! of the line height in stack of two -->
 	<!ENTITY st3lineh "5.5"> <!-- line height in stack of three -->
 	<!ENTITY st2baseline "2.5"> <!-- how much to move up for the central baseline in stack of 2 -->
 	<!ENTITY st3baseline "3.5"> <!-- how much to move up for the central baseline in stack of 3 -->
-	<!ENTITY st4pad "1.5"> <!-- padding between two stacks of 2 alterations in e.g. 7(b9#9#11b13) -->
-	<!ENTITY sharpind "0"> <!-- negative padding for # to remove leading space -->
-	<!ENTITY flatind "0.2"> <!-- padding for b -->
+	<!ENTITY st4pad "1.5"> <!-- padding between two stacks of 2 alterations, e.g. in 7(b9#9#11b13) -->
+	<!ENTITY sharpind "0"> <!-- negative padding before # to remove leading whitespace -->
+	<!ENTITY flatind "0.2"> <!-- padding before b -->
 ]>
 
 <museScore version="1.24">
