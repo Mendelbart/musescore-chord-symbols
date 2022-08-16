@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+=====================================================================
+    MuseScore
+    Linux Music Score Editor
+    Copyright (C) 2009 Werner Schweer and others
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+=====================================================================
+    This file describes how chord symbols are parsed and rendered
+    in MuseScore
+=====================================================================
+-->
+
+<!DOCTYPE museScore [
+	<!--
+		Feel free to edit these variables as you like. All the variables related to
+		distance are in 1/5 spatium units.
+
+		In MuseJazz, the extensions are already superscripted and therefore quite small,
+		so the variables below make them larger rather than smaller.
+	-->
+	<!ENTITY extsize "1.3"> <!-- size of superscripted extensions/alterations -->
+	<!ENTITY ext2size "1.1"> <!-- size of alterations when two are stacked -->
+	<!ENTITY ext3size "0.9"> <!-- size of alterations when three are stacked -->
+	<!ENTITY wordsize "1"> <!-- size of e.g. maj, add, sus, ... -->
+	<!ENTITY capitalwordsize "0.7"> <!-- size of M, MA, MI -->
+	<!ENTITY extdown "1.5"> <!-- y offset for extensions to be superscripted -->
+	<!ENTITY modup "5.5"> <!-- y offset for modifiers like ° or ø -->
+	<!ENTITY st2down "0.8"> <!-- how much to shift a stack of two alterations down from baseline -->
+	<!ENTITY st3down "1.6"> <!-- how much to shift a stack of three alterations down from baseline -->
+	<!ENTITY br2size "1.4"> <!-- size of bracket for stack of 2 -->
+	<!ENTITY br3size "1.85"> <!-- size of bracket for stack of 3 -->
+	<!ENTITY br2pad "-0.6"> <!-- padding of bracket in stack of two alterations (negative to reduce space inside brackets) -->
+	<!ENTITY br3pad "-0.8"> <!-- padding of bracket in stack of three alterations (negative to reduce space inside brackets) -->
+	<!ENTITY st2ind "1.4"> <!-- how much to indent 2-character alterations like #9 to match 3-character alterations like b13 in stack of 2 -->
+	<!ENTITY st3ind "1.2"> <!-- how much to indent 2-character alterations like #9 to match 3-character alterations like b13 in stack of 3 -->
+	<!ENTITY stpad "-0.2"> <!-- padding before a stack of alterations (negative to reduce whitespace) -->
+	<!ENTITY st2halflineh "5"> <!-- HALF! of the line height in stack of two -->
+	<!ENTITY st3lineh "9"> <!-- line height in stack of three -->
+	<!ENTITY st2baseline "2"> <!-- how much to move down for the central baseline in stack of 2 -->
+	<!ENTITY st3baseline "0"> <!-- how much to move down for the central baseline in stack of 3 -->
+	<!ENTITY st4pad "1.5"> <!-- padding between two stacks of 2 alterations, e.g. in 7(b9#9#11b13) -->
+	<!ENTITY sharpind "-0.8"> <!-- negative padding before # to remove leading whitespace -->
+	<!ENTITY flatind "0.3"> <!-- padding before b -->
+]>
+
+<museScore version="1.24">
+
+<!--
+      Part I: font list
+            associate symbols (code points) with names
+      If no font family is given or font family is "default" then the
+      configured text style font family is used.
+-->
+
+<!-- allow style to control mag and position adjustments -->
+<autoAdjust>1</autoAdjust>
+
+<font family="MuseJazz Text">
+	<sym code="0xe180" name="ma"/>
+	<sym code="0xe181" name="mi"/>
+	<sym code="0xe185" name="sus"/>
+	<sym code="0xe186" name="+"/>
+	<sym code="0xe187" name="circle"/>
+
+	<sym code="0x266d" name="b"/>
+	<sym code="0x266e" name="natural"/>
+	<sym code="0x266f" name="#"/>
+
+	<sym code="0x1d12a" name="##"/>
+	<sym code="0x1d12b" name="bb"/>
+</font>
+
+<font family="MuseJazz Text">
+	<mag>0.75</mag>
+	<sym code="0xe18a" name="triangle"/>
+</font>
+
+<font family="MuseJazz Text">
+	<mag>0.85</mag>
+	<sym code="0xe18e" name="circle"/>
+	<sym code="0xe18f" name="oslash"/>
+</font>
+
+<font family="MuseJazz Text">
+	<mag>1</mag>
+	<sym value="-" name="-"/>
+</font>
+
+<font class="extension" family="MuseJazz Text">
+	<mag>&extsize;</mag>
+	<sym code="0xe190" name="e0"/>
+    <sym code="0xe191" name="e1"/>
+    <sym code="0xe192" name="e2"/>
+    <sym code="0xe193" name="e3"/>
+    <sym code="0xe194" name="e4"/>
+    <sym code="0xe195" name="e5"/>
+    <sym code="0xe196" name="e6"/>
+    <sym code="0xe197" name="e7"/>
+    <sym code="0xe198" name="e8"/>
+    <sym code="0xe199" name="e9"/>
+</font>
+
+<font class="extension" family="MuseJazz Text">
+	<mag>0.75</mag>
+	<sym value="(" name="e("/>
+	<sym value=")" name="e)"/>
+	<sym value="," name="e,"/>
+	<sym value="/" name="e/"/>
+</font>
+
+<font class="modifier" family="MuseJazz Text">
+	<mag>0.75</mag>
+	<sym value="(" name="s("/>
+	<sym value=")" name="s)"/>
+	<sym value="," name="s,"/>
+	<sym value="/" name="s/"/>
+</font>
+
+<font class="modifier" family="MuseJazz Text">
+	<mag>&extsize;</mag>
+	<sym code="0xe190" name="s0"/>
+	<sym code="0xe191" name="s1"/>
+	<sym code="0xe192" name="s2"/>
+	<sym code="0xe193" name="s3"/>
+	<sym code="0xe194" name="s4"/>
+	<sym code="0xe195" name="s5"/>
+	<sym code="0xe196" name="s6"/>
+	<sym code="0xe197" name="s7"/>
+	<sym code="0xe198" name="s8"/>
+	<sym code="0xe199" name="s9"/>
+	<sym code="0xe182" name="s11"/>
+	<sym code="0xe183" name="s13"/>
+	<sym code="0xe188" name="sb"/>
+	<sym code="0xe189" name="s#"/>
+	<sym code="0xe18b" name="sadd"/>
+	<sym code="0xe184" name="sdim"/>
+</font>
+
+<font class="modifier" family="MuseJazz Text">
+	<mag>&capitalwordsize;</mag>
+	<sym value="M" name="sM"/>
+	<sym value="MA" name="sMA"/>
+	<sym value="MI" name="sMI"/>
+</font>
+
+<font class="modifier" family="MuseJazz Text">
+	<mag>&wordsize;</mag>
+	<sym value="Ma" name="sMa"/>
+	<sym value="Maj" name="sMaj"/>
+	<sym value="maj" name="smaj"/>
+	<sym value="Mi" name="sMi"/>
+	<sym value="Min" name="sMin"/>
+	<sym value="mi" name="smi"/>
+	<sym value="min" name="smin"/>
+	<sym value="alt" name="salt"/>
+	<sym value="aug" name="saug"/>
+	<sym value="no" name="sno"/>
+	<sym value="omit" name="somit"/>
+</font>
+
+<font class="modifier" family="MuseJazz Text">
+	<mag>&ext2size;</mag>
+	<sym code="0xe195" name="ss5"/>
+	<sym code="0xe199" name="ss9"/>
+	<sym code="0xe182" name="ss11"/>
+	<sym code="0xe183" name="ss13"/>
+	<sym code="0xe188" name="ssb"/>
+	<sym code="0xe189" name="ss#"/>
+
+	<sym value="6" name="696"/>
+	<sym value="9" name="699"/>
+</font>
+
+<font class="modifier" family="MuseJazz Text">
+	<mag>&ext3size;</mag>
+	<sym code="0xe195" name="sss5"/>
+	<sym code="0xe199" name="sss9"/>
+	<sym code="0xe182" name="sss11"/>
+	<sym code="0xe183" name="sss13"/>
+	<sym code="0xe188" name="sssb"/>
+	<sym code="0xe189" name="sss#"/>
+</font>
+
+<font>
+	<mag>&br2size;</mag>
+	<sym value="(" name="ss("/>
+	<sym value=")" name="ss)"/>
+</font>
+
+<font>
+	<mag>&br3size;</mag>
+	<sym value="(" name="sss("/>
+	<sym value=")" name="sss)"/>
+</font>
+
+<!--
+      Part II: token list
+            define how the various tokens within a chord symbol should be rendered
+         name     ordinary text name of token
+                  multiple names may be listed to allow mseveral different tokens to render the same way
+         render   this is a script that contains render commands
+                  see Part III for details
+-->
+
+<token>
+	<name>t</name>
+	<name>^</name>
+	<render>m:0:-&modup; triangle m:0:&modup;</render>
+</token>
+
+<token>
+	<name>M</name>
+	<render>sM</render>
+</token>
+
+<token>
+	<name>o</name>
+	<render>m:0:-&modup; circle m:0:&modup;</render>
+</token>
+
+<token>
+	<name>-</name>
+	<render>m:0:-0.5 - m:0:0.5</render>
+</token>
+
+<token>
+	<name>0</name>
+	<render>m:0:-&modup; oslash m:0:&modup;</render>
+</token>
+
+<token>
+	<name>69</name>
+	<render>:push m:0:-&st2halflineh; 696 :pop m:0:&st2halflineh; 699 m:0:-&st2halflineh;</render>
+</token>
+
+<token class="extension">
+	<name>6,9</name>
+	<render>m:0:&extdown; e6 e, e9 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>6/9</name>
+	<render>m:0:-2 e6 m:0:1 e/ m:0:1 e9</render>
+</token>
+
+<token class="extension">
+	<name>0</name>
+	<render>m:0:&extdown; e0 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>1</name>
+	<render>m:0:&extdown; e1 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>2</name>
+	<render>m:0:&extdown; e2 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>3</name>
+	<render>m:0:&extdown; e3 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>4</name>
+	<render>m:0:&extdown; e4 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>5</name>
+	<render>m:0:&extdown; e5 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>6</name>
+	<render>m:0:&extdown; e6 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>7</name>
+	<render>m:0:&extdown; e7 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>8</name>
+	<render>m:0:&extdown; e8 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>9</name>
+	<render>m:0:&extdown; e9 m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>(</name>
+	<render>m:0:&extdown; e( m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>)</name>
+	<render>m:0:&extdown; e) m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>,</name>
+	<render>m:0:&extdown; e, m:0:-&extdown;</render>
+</token>
+
+<token class="extension">
+	<name>/</name>
+	<render>m:0:&extdown; e/ m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>0</name>
+	<render>m:0:&extdown; s0 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>1</name>
+	<render>m:0:&extdown; s1 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>2</name>
+	<render>m:0:&extdown; s2 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>3</name>
+	<render>m:0:&extdown; s3 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>4</name>
+	<render>m:0:&extdown; s4 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>5</name>
+	<render>m:0:&extdown; s5 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>6</name>
+	<render>m:0:&extdown; s6 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>7</name>
+	<render>m:0:&extdown; s7 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>8</name>
+	<render>m:0:&extdown; s8 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>9</name>
+	<render>m:0:&extdown; s9 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>11</name>
+	<render>m:0:&extdown; s11 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>13</name>
+	<render>m:0:&extdown; s13 m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>(</name>
+	<render>m:0:-&modup; s( m:0:&modup;</render>
+</token>
+
+<token class="modifier">
+	<name>)</name>
+	<render>m:0:-&modup; s) m:0:&modup;</render>
+</token>
+
+<token class="modifier">
+	<name>,</name>
+	<render>m:0:&extdown; s, m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>/</name>
+	<render>m:0:&extdown; s/ m:0:-&extdown;</render>
+</token>
+
+<token class="quality">
+	<name>M</name>
+	<render>sM</render>
+</token>
+
+<token class="quality">
+	<name>MA</name>
+	<render>sMA</render>
+</token>
+
+<token class="quality">
+	<name>MI</name>
+	<render>sMI</render>
+</token>
+
+<token class="quality">
+	<name>Ma</name>
+	<render>sMa</render>
+</token>
+
+<token class="quality">
+	<name>Maj</name>
+	<render>sMaj</render>
+</token>
+
+<token class="quality">
+	<name>ma</name>
+	<render>sma</render>
+</token>
+
+<token class="quality">
+	<name>maj</name>
+	<render>smaj</render>
+</token>
+
+<token class="quality">
+	<name>Mi</name>
+	<render>sMi</render>
+</token>
+
+<token class="quality">
+	<name>Min</name>
+	<render>sMin</render>
+</token>
+
+<token class="quality">
+	<name>mi</name>
+	<render>smi</render>
+</token>
+
+<token class="quality">
+	<name>min</name>
+	<render>smin</render>
+</token>
+
+<token>
+	<name>add</name>
+	<render>sadd</render>
+</token>
+
+<token>
+	<name>alt</name>
+	<render>salt</render>
+</token>
+
+<token>
+	<name>aug</name>
+	<render>saug</render>
+</token>
+
+<token>
+	<name>dim</name>
+	<render>sdim</render>
+</token>
+
+<token>
+	<name>no</name>
+	<render>sno</render>
+</token>
+
+<token>
+	<name>omit</name>
+	<render>somit</render>
+</token>
+
+<token>
+	<name>sus</name>
+	<render>ssus</render>
+</token>
+
+<token class="modifier">
+	<name>b</name>
+	<render>m:0:&extdown; sb m:0:-&extdown;</render>
+</token>
+
+<token class="modifier">
+	<name>#</name>
+	<render>m:0:&extdown; s# m:0:-&extdown;</render>
+</token>
+
+<renderRoot>:n :a m:0.2:0</renderRoot>
+<renderFunction>:a m:0.2:0 :n</renderFunction>
+<renderBase>m:-0.6:1.5 / m:0:1.5 :n :a m:0:-3</renderBase>
+
+<!--
+      Part III: chord list
+            declare a list of chords to be explicitly recognized
+            any chord recognized as matching something on this list
+            will be rendered according to the definition in this list,
+            as opposed to being rendered directly from the chord symbol as typed
+            thus, it provides the ability to define overrides for rendering specific chord symbols
+         id       internal chord number
+                  may be omitted if you don't need compatibility with older chord description files
+         name     ordinary text name of chord
+                  multiple names can be used to allow several different representations of the same chord
+                  but there is no need to list the most common variations like "CMaj7" versus "Cma7"
+                  the need for multiple names comes in if you want
+                  significantly different ways of entering the same chord
+                  so listing "mi7b5" and "07" as aliases for the same (half-diminished) chord
+                  would allow them to be recognized as equivalent
+         render   this is a script which contains render commands
+                  commands:
+                        xxx         draw symbol name xxx
+                        m:x:y       add x:y to current position (1/5 spatium units)
+                        :push
+                        :pop
+                        :n          root or base note
+                        :a          accidental
+                  if omitted, chord will be rendered directly from the first name listed above
+                  so you can get all major seventh chords to render as "ma7" by creating a chord definition
+                  with no id or render tag, and just the single name "ma7"
+-->
+
+!chords!
+
+
+</museScore>
